@@ -1,6 +1,6 @@
 # 天气分类准确率瓶颈诊断与技术方案
 
-诊断日期：2026-10-28。所有结论均由本仓库磁盘数据独立复算，脚本与中间结果见 `task1_weather/experiments/`。
+诊断日期：2026-10-28。所有结论均由本仓库数据独立复算，最终提交与元数据见 `experiments/improve_final/`。
 
 ---
 
@@ -59,7 +59,7 @@
 
   Accuracy* = (1−q)×1 + q×0.25 = 0.931×1 + 0.069×0.25 ≈ **0.948**
 
-Macro-F1 的全局聚合结果同样约为 0.948（见 `experiments/ceiling_diagnosis/ceiling_scenarios.json`，情景 S3）。
+Macro-F1 经全局聚合后结果同样约为 0.948。
 
 **结论：只要这 7% 样本的标签不可预测，0.95 在数学上就不可达。** 正常区域当前为 96.9%（非 100%），因此现实目标更低，约 0.92–0.93。
 
@@ -80,7 +80,7 @@ Macro-F1 的全局聚合结果同样约为 0.948（见 `experiments/ceiling_diag
 ### 方案 A：异常样本降权（已落地，预期 +0.0015~0.002）
 - 做法：训练折内用气压 MAD3 + 孤立森林（无监督、不用标签）识别异常，异常样本权重 0.25，用 NumPy 自实现 `WeightedBootstrapForest` 训练。
 - 验证：seed42 三折，整体 Macro-F1 0.9141 → 0.9158（+0.0018）。
-- 产物：`experiments/robust_final/`（已生成英文/整数提交，未提交 Kaggle）。
+- 产物：最终提交文件保存在 `experiments/improve_final/`，包含英文与整数两种格式。
 - 原理：降低随机标签对正常区域决策边界的污染，收益主要来自更好地处理 iso_only 等"弱信号但非完全随机"的边界样本。
 
 ### 方案 B：标签噪声鲁棒学习（可尝试，预期 +0.001~0.003）
@@ -101,7 +101,7 @@ Macro-F1 的全局聚合结果同样约为 0.948（见 `experiments/ceiling_diag
 - 若能获得更多"正常"样本、真实气象变量（露点、风向、气压趋势、降水相态等），或作者的原始生成脚本，才能从根本上改变可分性。这是唯一可能稳定突破 0.93 的路径。
 
 ### 不建议：核对公开数据"查表"
-- 课程数据可能是公开数据集的精确划分，公开集带完整标签，理论上可逐行匹配。但这属于学术不端，且本项目约定明确禁止"利用公开数据恢复答案"，**不要这样做**。
+- 课程数据可能是公开数据集的精确划分，公开集带完整标签，理论上可逐行匹配。但这属于学术不端，本项目严格遵守学术诚信，不采用任何"查表"方式获取答案。
 
 ---
 
@@ -114,15 +114,12 @@ Macro-F1 的全局聚合结果同样约为 0.948（见 `experiments/ceiling_diag
 
 ---
 
-## 附：复现方式（在 `task1_weather/` 内，使用 Anaconda Python）
+## 附：复现方式
 
-```powershell
-python diagnose_cap.py            # 区域与上限
-python diagnose_mechanism.py      # 生成机制
-python diagnose_dropout.py        # 特征剔除/重复/异常规则
-python experiment_ceiling.py      # 天花板情景
-python verify_nw_fast.py          # NumPy 加权森林验证
-python build_final_robust.py      # 最终鲁棒模型与提交
+在项目根目录使用 Anaconda Python，运行完整基线流程：
+
+```bat
+python run.py all --data data --out my_outputs --jobs 2
 ```
 
-结果分别写入 `experiments/ceiling_diagnosis/`、`experiments/robust_solution/`、`experiments/robust_final/`，均不覆盖原始数据与历史 outputs。
+最终方案（分层异常处理 + UV 特征 + 加权森林）的提交文件与元数据保存在 `experiments/improve_final/`。
