@@ -1,0 +1,12 @@
+{
+  "train_rows": 9900,
+  "test_rows": 3300,
+  "pressure_anomaly_train": 678,
+  "pipeline": "非气压winsorize修复 + uv_vis/uv_precip特征 + 气压降权0.25 + NumPy加权森林300",
+  "train_seconds": 33.51,
+  "infer_seconds": 0.65,
+  "train_overall_acc": 0.9543,
+  "train_overall_f1": 0.9546,
+  "multi_holdout_mean_f1": 0.9191,
+  "note": "多留出(5个seed)平均F1=0.9191；测试全部记录预测；未提交Kaggle"
+}
